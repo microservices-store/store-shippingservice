@@ -11,6 +11,7 @@ COPY Gopkg.* ./
 RUN dep ensure --vendor-only -v
 COPY . .
 RUN go install .
+RUN ls -R /go/bin
 
 FROM alpine as release
 RUN apk add --no-cache ca-certificates
