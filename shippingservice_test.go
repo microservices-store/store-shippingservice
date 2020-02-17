@@ -19,7 +19,7 @@ import (
 
 	"golang.org/x/net/context"
 
-	pb "github.com/ortelius/microservices-demo/src/shippingservice/genproto"
+	pb "github.com/ortelius/store-shippingservice/src/shippingservice/genproto"
 )
 
 // TestGetQuote is a basic check on the GetQuote RPC service.
