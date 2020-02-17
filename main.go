@@ -31,7 +31,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	pb "github.com/ortelius/store-shippingservice/src/shippingservice/genproto"
+	pb "github.com/ortelius/store-shippingservice/genproto"
 	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 )
 
