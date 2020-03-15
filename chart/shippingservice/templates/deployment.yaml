@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name:  {{ include "shipppingservice.name" . }}
+  name:  {{ include "shippingservice.name" . }}
 spec:
   selector:
     matchLabels:
-      app:  {{ include "shipppingservice.name" . }}
+      app:  {{ include "shippingservice.name" . }}
   template:
     metadata:
       labels:
-        app:  {{ include "shipppingservice.name" . }}
+        app:  {{ include "shippingservice.name" . }}
     spec:
       terminationGracePeriodSeconds: 5
       containers:
-        - name: {{ include "shipppingservice.name" . }}
+        - name: {{ include "shippingservice.name" . }}
           image: "{{ .Values.DockerRepo }}:{{ .Values.DockerTag }}"
           imagePullPolicy: Always 
           ports:
