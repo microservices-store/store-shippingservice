@@ -16,7 +16,7 @@ From repository root, run:
 docker build --file src/shippingservice/Dockerfile .
 ```
 
-## Test
+### Test
 
 ```
 go test .
