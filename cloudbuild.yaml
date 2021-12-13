@@ -93,7 +93,7 @@ secrets:
     QUAY_PASSWORD: CiQAUULEud9Ej8XtwNAb9gkbDVhSGFZYhUGE30fNwR+7ehAOkH8SMgCz6KYeykjgS16RPxgKlrIQL/1TKDt06v4OXGIisFXOkdWC+jvdda8mTzVNCi8sT5g6 
 - kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/ortelius-id
   secretEnv:
-    DHUSER: CiQAGgJuQMHWANazqTOeE/SyoX/YNVWnES7eJEVWY8mTP98Er3USMQC43iiopoGYhP/YahsQu/yUURiqJBVZURYiUiu5Z7UBkrDgUAonKCKjtzeSNUP7HoQ=
+    DHUSER: CiQAGgJuQAQmjFzjX9302sUsLn2zRKVGLVEdTahSJWyYgs2/5SESMgC43iiovCKw6BwoNdC2zg+p/cR58Bl5lQqml7ZWzgy6Jla5e0ls/q0DDBbveFDMjLIA
 - kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/ortelius-pw
   secretEnv:
-    DHPASS: CiQAZySXz07McN9e6fyr6X4qwkw4iBgeULmpq16RbxIAcqg6gTESMQB98+y30zqMVPx2S/Q/8ld+qlJWWxmocnbjLe9iyepMwyMl3yf+r5e55nf85PlrBBw=   
+    DHPASS: CiQAZySXz1rQDg2EizTy5RoptTEmiv3rGncgX/xTlX23u3PT1yUSLgB98+y3fC/3vM3IcviDOs+tZvsIBN//Qhr2xJnE1k+pZiD2qtf6qXMtRNIBqg0=   
