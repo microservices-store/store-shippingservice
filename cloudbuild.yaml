@@ -1,47 +1,89 @@
-steps:
-  # Get Env Vars from dhvars.toml and create cloudbuild.sh
-  - name: 'quay.io/deployhub/compupdate'
-    args: ['envscript', '--envvars', 'cloudbuild.toml']
-  # Use commit count in IMAGE_TAG
-  - name: gcr.io/cloud-builders/docker
-    entrypoint: 'bash'
-    args: ['-c', '. /workspace/cloudbuild.sh;git clone $$COMPONENT_GITURL /tmp/git;cd /tmp/git;echo export IMAGE_TAG=\"$BRANCH_NAME-v$$COMPONENT_VERSION.$(git rev-list --count $BRANCH_NAME)-g$SHORT_SHA\" >> /workspace/cloudbuild.sh;cat /workspace/cloudbuild.sh']
+# Copyright (c) 2021 Linux Foundation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-  # Build the image and save details as part of the LABEL
-  - name: 'gcr.io/cloud-builders/docker'
+steps:
+  # Get ssh key from Google Secret Manager
+  - name: gcr.io/cloud-builders/gcloud
+    id: ssh_keys
     entrypoint: 'bash'
-    args: ["-c", '. /workspace/cloudbuild.sh;docker build --tag "$$COMPONENT_DOCKERREPO:$$IMAGE_TAG" --build-arg "BLDDATE=$$BLDDATE" --build-arg "REPO_NAME=$REPO_NAME" --build-arg "COMMIT_SHA=$COMMIT_SHA" --build-arg "SHORT_SHA=$SHORT_SHA" --build-arg "PROJECT_ID=$PROJECT_ID" --build-arg "BUILD_ID=$BUILD_ID" --build-arg "BRANCH_NAME=$BRANCH_NAME" --build-arg "TAG_NAME=$TAG_NAME" --build-arg "REVISION_ID=$REVISION_ID" .']
-    
-  # Login to Quay for push.
-  # PASSWORD is decrypted before this step runs.
-  # Note: You need a shell to resolve environment variables with $$
-  - name: 'gcr.io/cloud-builders/docker'
-    entrypoint: 'bash'
-    env:
-      - 'DOCKER_CONFIG=/workspace/docker-config'
-    args: ['-c', '. /workspace/cloudbuild.sh;docker login quay.io --username "$$QUAY_USERID" --password $$QUAY_PASSWORD']
-    secretEnv: ['QUAY_USERID', 'QUAY_PASSWORD']
+    args: [ '-c', 'gcloud secrets versions access latest --secret=github > /root/.ssh/id_rsa;chmod 600 /root/.ssh/id_rsa;ssh-keyscan -t rsa github.com > /root/.ssh/known_hosts' ]
+    volumes:
+    - name: 'ssh'
+      path: /root/.ssh
   
-  # Push the image to Quay.
+  # Login to Quay for push.
   - name: 'gcr.io/cloud-builders/docker'
+    id: login
+    waitFor: ['ssh_keys']
     entrypoint: 'bash'
+    args: ['-c', 'docker login quay.io --username "$$QUAY_USERID" --password $$QUAY_PASSWORD']
+    secretEnv: ['QUAY_USERID', 'QUAY_PASSWORD']     
     env:
       - 'DOCKER_CONFIG=/workspace/docker-config'
-    args: ['-c', ". /workspace/cloudbuild.sh;docker push $$COMPONENT_DOCKERREPO:$$IMAGE_TAG"]
+
+  # Setup environment including img tag name for nginx
+  - name: gcr.io/cloud-builders/docker
+    id: env
+    waitFor: ['login']
+    entrypoint: 'bash'
+    args: ['-c', 'ls -A1 | grep -v docker-config | xargs rm -rf;git init; git remote add origin $$COMPONENT_GITURL;git fetch;git checkout --track -b $BRANCH_NAME origin/$BRANCH_NAME;env | sed "s/^/export /" >> /workspace/cloudbuild.sh']
+    volumes:
+    - name: 'ssh'
+      path: /root/.ssh
+    env: 
+      - 'COMPONENT_APPLICATION=GLOBAL.Stella Horses.Online Store Company.Hipster Store;July 4th Sale;'
+      - 'COMPONENT_APPLICATION_VERSION=1.2.9.1'      
+      - 'COMPONENT_NAME=GLOBAL.Stella Horses.Online Store Company.Purchase Processing.Shipping Service.shippingservice'
+      - 'COMPONENT_GITURL=git@github.com:ortelius/store-shippingservice.git'
+      - 'COMPONENT_VARIANT=$BRANCH_NAME'
+      - 'COMPONENT_VERSION=1.2.2'
+      - 'COMPONENT_VERSION_COMMIT="v1.2.2.$$(git rev-list --count $BRANCH_NAME)-g$SHORT_SHA"'
+      - 'COMPONENT_DOCKERREPO=quay.io/hipsterstore/shippingservice'
+      - 'COMPONENT_CUSTOMACTION=GLOBAL.HelmChart'
+      - 'COMPONENT_CHARTNAME=chart/shippingservice'
+      - 'COMPONENT_CHARTNAMESPACE=stores'
+      - 'DEPLOY_ENV=GLOBAL.ortelius.saas.aks-cluster'
+      - 'BLDDATE=`date`'
+      - 'IMAGE_TAG="$BRANCH_NAME-v$$COMPONENT_VERSION.$$(git rev-list --count $BRANCH_NAME)-g$SHORT_SHA"'
+      - 'DOCKER_CONFIG=/workspace/docker-config'
+
+  # Build and push quay.io/ortelius/ms-textfile-crud
+  - name: 'gcr.io/cloud-builders/docker'
+    id: build_push
+    waitFor: ['env']
+    entrypoint: 'bash'
+    args: ["-c", '. /workspace/cloudbuild.sh;docker build --tag $$COMPONENT_DOCKERREPO:$$IMAGE_TAG -f /workspace/Dockerfile .;docker push $$COMPONENT_DOCKERREPO:$$IMAGE_TAG']
+    env:
+      - 'DOCKER_CONFIG=/workspace/docker-config'
 
   # Get image id
   - name: 'gcr.io/cloud-builders/docker'
+    id: digest
+    waitFor: ['build_push']
     entrypoint: 'bash'
     env:
       - 'DOCKER_CONFIG=/workspace/docker-config'
-    args: ['-c', ". /workspace/cloudbuild.sh;echo export DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $$COMPONENT_DOCKERREPO:$$IMAGE_TAG) >> cloudbuild.sh" ]
+    args: ['-c', ". /workspace/cloudbuild.sh;echo export DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $$COMPONENT_DOCKERREPO:$$IMAGE_TAG) >> /workspace/cloudbuild.sh" ]
 
   # Capture new component version in DeployHub
   - name: 'quay.io/deployhub/compupdate'
+    id: compupdate
+    waitFor: ['digest']
     entrypoint: 'bash'
     secretEnv: ['DHUSER', 'DHPASS']
-    args: ['-c', '. /workspace/cloudbuild.sh;dh updatecomp --dhurl https://console.deployhub.com --appname "$$COMPONENT_APPLICATION" --compname "$$COMPONENT_NAME" --compversion $$IMAGE_TAG --docker --compattr "GitCommit:$SHORT_SHA" --compattr "GitUrl:$$COMPONENT_GITURL" --compattr "GitRepo:$REPO_NAME" --compattr "GitTag:$TAG_NAME" --compattr "GitBranch:$BRANCH_NAME" --compattr "Chart:$$COMPONENT_CHARTNAME" --compattr "DockerSha:$$DIGEST" --compattr "DockerBuildDate:$$BLDDATE" --compattr "DockerRepo:$$COMPONENT_DOCKERREPO" --compattr "BuildId:$BUILD_ID" --compattr "BuildUrl:https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=$PROJECT_ID" --compattr "CustomAction:$$COMPONENT_CUSTOMACTION" --compattr "DockerTag:$$IMAGE_TAG"']
- 
+    args: ['-c', '. /workspace/cloudbuild.sh;dh updatecomp --dhurl https://dev.ortelius.io --appname "$$COMPONENT_APPLICATION" --appversion "$$COMPONENT_APPLICATION_VERSION" --appautoinc Y --deployenv "$$DEPLOY_ENV" --compname "$$COMPONENT_NAME" --compvariant "$$COMPONENT_VARIANT" --compversion "$$COMPONENT_VERSION_COMMIT" --docker --compattr "GitCommit:$SHORT_SHA" --compattr "GitUrl:$$COMPONENT_GITURL" --compattr "GitRepo:ortelius/$REPO_NAME" --compattr "GitTag:$TAG_NAME" --compattr "GitBranch:$BRANCH_NAME" --compattr "Chart:$$COMPONENT_CHARTNAME" --compattr "DockerSha:$$DIGEST" --compattr "DockerBuildDate:$$BLDDATE" --compattr "DockerRepo:$$COMPONENT_DOCKERREPO" --compattr "BuildId:$BUILD_ID" --compattr "BuildUrl:https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=$PROJECT_ID" --compattr "CustomAction:$$COMPONENT_CUSTOMACTION" --compattr "DockerTag:$$IMAGE_TAG" --compattr "ChartNamespace:$$COMPONENT_CHARTNAMESPACE"']
+
 secrets:
 - kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/quay
   secretEnv:
@@ -49,10 +91,9 @@ secrets:
 - kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/quay-pw
   secretEnv:
     QUAY_PASSWORD: CiQAUULEud9Ej8XtwNAb9gkbDVhSGFZYhUGE30fNwR+7ehAOkH8SMgCz6KYeykjgS16RPxgKlrIQL/1TKDt06v4OXGIisFXOkdWC+jvdda8mTzVNCi8sT5g6 
-- kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/deployhub-id
+- kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/ortelius-id
   secretEnv:
-    DHUSER: CiQAWaYEUxvyFOXQ9sTfQV7oQVnYbo8dnBtBBGu68nZ5t5PwyfASMQC/Ky27lzG8D0+MSmMiAOJyAcyV+wJqbPeb0EiDpMFmRQLfUiO16v6IzAyImyMOA2U=
-- kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/deployhub-pw
+    DHUSER: CiQAGgJuQMHWANazqTOeE/SyoX/YNVWnES7eJEVWY8mTP98Er3USMQC43iiopoGYhP/YahsQu/yUURiqJBVZURYiUiu5Z7UBkrDgUAonKCKjtzeSNUP7HoQ=
+- kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/ortelius-pw
   secretEnv:
-    DHPASS: CiQAJVcuyaWuQT/AqWDpmiC8Ncev/wtGYcLMrGLsBqeGac7Ssa0SLwBByiFzFczptdw9H/By8UYGABrmrhidRwNh0P65xRVc7U0zhKIKhlFiPMYNqo9z 
-  
+    DHPASS: CiQAZySXz07McN9e6fyr6X4qwkw4iBgeULmpq16RbxIAcqg6gTESMQB98+y30zqMVPx2S/Q/8ld+qlJWWxmocnbjLe9iyepMwyMl3yf+r5e55nf85PlrBBw=   
