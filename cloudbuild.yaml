@@ -37,7 +37,7 @@ steps:
     id: env
     waitFor: ['login']
     entrypoint: 'bash'
-    args: ['-c', 'ls -A1 | grep -v docker-config | xargs rm -rf;git init; git remote add origin $$COMPONENT_GITURL;git fetch;git checkout --track -b $BRANCH_NAME origin/$BRANCH_NAME;env | sed "s/^/export /" >> /workspace/cloudbuild.sh;cat /workspace/cloudbuild.sh']
+    args: ['-c', 'ls -A1 | grep -v docker-config | xargs rm -rf;git init; git remote add origin $$COMPONENT_GITURL;git fetch;git checkout --track -b $BRANCH_NAME origin/$BRANCH_NAME;env | sort | sed "s/^/export /" >> /workspace/cloudbuild.sh;cat /workspace/cloudbuild.sh']
     volumes:
     - name: 'ssh'
       path: /root/.ssh
@@ -53,11 +53,11 @@ steps:
       - 'COMPONENT_CUSTOMACTION=GLOBAL.HelmChart'
       - 'COMPONENT_CHARTNAME=chart/shippingservice'
       - 'COMPONENT_CHARTNAMESPACE=stores'
-      - 'COMPONENT_OWNER_NAME=`curl http://www.pseudorandom.name`'
-      - 'COMPONENT_OWNER="GLOBAL.Stella Horses.Online Store Company.Purchase Processing.$$COMPONENT_OWNER_NAME"'
-      - 'COMPONENT_OWNER_ID=$$(echo $$COMPONENT_OWNER_NAME | tr -d " ")'
-      - 'COMPONENT_OWNER_EMAIL=$$COMPONENT_OWNER_ID@gmail.com'
-      - 'COMPONENT_OWNER_PHONE="312-444-5555"'
+      - 'COMPONENT_OWNER_1_NAME=`curl http://www.pseudorandom.name`'
+      - 'COMPONENT_OWNER_2_FULLNAME="GLOBAL.Stella Horses.Online Store Company.Purchase Processing.$$COMPONENT_OWNER_1_NAME"'
+      - 'COMPONENT_OWNER_3_ID=$$(echo $$COMPONENT_OWNER_1_NAME | tr -d " ")'
+      - 'COMPONENT_OWNER_4_EMAIL=$$COMPONENT_OWNER_3_ID@gmail.com'
+      - 'COMPONENT_OWNER_5_PHONE="312-444-5555"'
       - 'DEPLOY_ENV=GLOBAL.ortelius.saas.aks-cluster'
       - 'BLDDATE=`date`'
       - 'IMAGE_TAG="$BRANCH_NAME-v$$COMPONENT_VERSION.$$(git rev-list --count $BRANCH_NAME)-g$SHORT_SHA"'

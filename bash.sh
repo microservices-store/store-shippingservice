@@ -1,0 +1,29 @@
+#!/bin/bash
+export COMPONENT_APPLICATION_VERSION=1.2.9.1
+export DEPLOY_ENV=GLOBAL.ortelius.saas.aks-cluster
+export COMPONENT_OWNER_ID=$(echo $COMPONENT_OWNER_NAME | tr -d " ")
+export BLDDATE=`date`
+export HOSTNAME=e2a790b12023
+export COMPONENT_CUSTOMACTION=GLOBAL.HelmChart
+export COMPONENT_NAME="GLOBAL.Stella Horses.Online Store Company.Purchase Processing.Shipping Service.shippingservice"
+export PWD=/workspace
+export HOME=/builder/home
+export COMPONENT_OWNER="GLOBAL.Stella Horses.Online Store Company.Purchase Processing.$COMPONENT_OWNER_NAME"
+export COMPONENT_OWNER_EMAIL=$COMPONENT_OWNER_ID@gmail.com
+export BUILDER_OUTPUT=/builder/outputs
+export COMPONENT_VERSION_COMMIT="v1.2.2.$(git rev-list --count master)-g93c822c"
+export COMPONENT_VERSION=1.2.2
+export COMPONENT_OWNER_NAME=`curl http://www.pseudorandom.name`
+export COMPONENT_CHARTNAME=chart/shippingservice
+export IMAGE_TAG="master-v$COMPONENT_VERSION.$(git rev-list --count master)-g93c822c"
+export SHLVL=0
+export COMPONENT_DOCKERREPO=quay.io/hipsterstore/shippingservice
+export COMPONENT_APPLICATION="GLOBAL.Stella Horses.Online Store Company.Hipster Store;July 4th Sale"
+export COMPONENT_CHARTNAMESPACE=stores
+export COMPONENT_OWNER_PHONE="312-444-5555"
+export COMPONENT_VARIANT=master
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+export COMPONENT_GITURL=git@github.com:ortelius/store-shippingservice.git
+export DOCKER_CONFIG=/workspace/docker-config
+export DEBIAN_FRONTEND=noninteractives
+env
