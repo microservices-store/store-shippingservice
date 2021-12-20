@@ -54,7 +54,7 @@ steps:
       - 'COMPONENT_CHARTNAME=chart/shippingservice'
       - 'COMPONENT_CHARTNAMESPACE=stores'
       - 'COMPONENT_OWNER="GLOBAL.Stella Horses.Online Store Company.Purchase Processing.$$(curl http://www.pseudorandom.name/)"'
-      - 'COMPONENT_OWNER_ID=$$(echo $$COMPONENT_OWNER | tr -d \" \")"'
+      - 'COMPONENT_OWNER_ID="$$(echo $$COMPONENT_OWNER | tr -d \" \")"'
       - 'COMPONENT_OWNER_EMAIL="$$COMPONENT_OWNER_ID@gmail.com"'
       - 'COMPONENT_OWNER_PHONE="312-444-5555"'
       - 'DEPLOY_ENV=GLOBAL.ortelius.saas.aks-cluster'
