@@ -17,20 +17,6 @@ steps:
   - name: gcr.io/cloud-builders/git
     args: ['fetch', '--unshallow']
 
-  # Get ssh key from Google Secret Manager
-  - name: gcr.io/cloud-builders/gcloud
-    id: ssh_keys
-    entrypoint: 'bash'
-    args: 
-      - '-c'
-      - | 
-        gcloud secrets versions access latest --secret=github > /root/.ssh/id_rsa; \
-        chmod 600 /root/.ssh/id_rsa; \
-        ssh-keyscan -t rsa github.com >> /root/.ssh/known_hosts
-    volumes:
-    - name: 'ssh'
-      path: /root/.ssh
-  
   # Setup environment including img tag name for nginx
   - name: python
     id: env
@@ -55,12 +41,13 @@ steps:
   # Login to Quay for push.
   - name: 'gcr.io/cloud-builders/docker'
     id: login
-    env: [ 'DOCKER_CONFIG=/workspace/docker-config' ]
     secretEnv: ['QUAY_USERID', 'QUAY_PASSWORD']  
     entrypoint: 'bash'
     args: 
       - '-c'
-      - docker login quay.io --username "$$QUAY_USERID" --password $$QUAY_PASSWORD  
+      - | 
+        source /workspace/cloudbuild.sh; \
+        docker login quay.io --username "$$QUAY_USERID" --password $$QUAY_PASSWORD  
 
 
   # Build and push quay.io/ortelius/ms-textfile-crud
@@ -70,7 +57,7 @@ steps:
     args: 
       - '-c'
       - |
-        . /workspace/cloudbuild.sh; \
+        source /workspace/cloudbuild.sh; \
         docker build --tag $$COMPONENT_DOCKERREPO:$$IMAGE_TAG -f /workspace/Dockerfile .; \
         docker push $$COMPONENT_DOCKERREPO:$$IMAGE_TAG'
 
@@ -81,7 +68,7 @@ steps:
     args: 
       - '-c'
       - |
-        . /workspace/cloudbuild.sh; \
+        source /workspace/cloudbuild.sh; \
         echo export DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $$COMPONENT_DOCKERREPO:$$IMAGE_TAG) >> /workspace/cloudbuild.sh"
 
   # Capture new component version in DeployHub
@@ -92,7 +79,7 @@ steps:
     args: 
       - '-c'
       - |
-        . /workspace/cloudbuild.sh; \
+        source /workspace/cloudbuild.sh; \
         pip install deployhub; \
         dh updatecomp --rsp /workspace/component.toml
 
