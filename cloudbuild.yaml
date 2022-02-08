@@ -31,9 +31,10 @@ steps:
     args:
       - '-c'
       - |
-        pip install deployhub; \
+        pip install deployhub | grep -i deployhub; \
         dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh; \
-        cat /workspace/cloudbuild.sh
+        source /workspace/cloudbuild.sh; \
+        env | sort;
 
   # Login to Quay for push.
   - name: 'gcr.io/cloud-builders/docker'
@@ -76,8 +77,8 @@ steps:
     args: 
       - '-c'
       - |
+        pip install deployhub | grep -i deployhub; \
         source /workspace/cloudbuild.sh; \
-        pip install deployhub; \
         dh updatecomp --rsp /workspace/component.toml
 
 secrets:
