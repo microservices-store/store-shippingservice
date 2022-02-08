@@ -12,6 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+options:
+  env:
+    - "BRANCH_NAME=${BRANCH_NAME}"
+    - "BUILD_ID=${BUILD_ID}"
+    - "DHURL=https://console.deployhub.com"
+    - "DOCKER_CONFIG=/workspace/docker-config"
+    - "PROJECT_ID=${PROJECT_ID}"
+    - "SHORT_SHA=${SHORT_SHA}"
+    - "TAG_NAME=${TAG_NAME}"
 steps:
   # Setup environment including img tag name for nginx
   - name: python
@@ -21,14 +30,11 @@ steps:
       - '-c'
       - |
         git fetch --unshallow; \
-        export BUILDNUM=`git log --oneline | wc -l | tr -d " "`; \
-        export GIT_REPO=`git config --get remote.origin.url | sed 's/.*://;s/.git$//;s#^//github.com/##;'`; \
-        export GIT_URL=`git config --get remote.origin.url`; \
-        export BLDDATE=`date`; \
-        export DHURL=https://console.deployhub.com; \
-        export DOCKER_CONFIG=/workspace/docker-config; \
+        BUILDNUM=`git log --oneline | wc -l | tr -d " "`; \
+        GIT_REPO=`git config --get remote.origin.url | sed 's/.*://;s/.git$//;s#^//github.com/##;'`; \
+        GIT_URL=`git config --get remote.origin.url`; \
         pip3 install deployhub | grep -i deployhub; \
-        dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh; \
+        dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh;
         source /workspace/cloudbuild.sh; \
         env | sort;
 
