@@ -15,19 +15,10 @@
 steps:
   # Checkout all history
   - name: gcr.io/cloud-builders/git
-    args: ['fetch', '--unshallow']
-
-  # Setup environment including img tag name for nginx
+    args: ["fetch", "--unshallow"]
   - name: gcr.io/cloud-builders/git
-    id: gitvars
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        export BUILDNUM=`git rev-list --count ${BRANCH_NAME}`; \
-        export GIT_REPO=`git config --get remote.origin.url | sed 's/.*://;s/.git$//'`; \
-        export GIT_URL=`git config --get remote.origin.url`; \
-        env | sed "s/^/export /" > /workspace/cloudbuild.sh;
+    entrypoint: /bin/bash
+    args: ['-c','git log --oneline;git rev-list --count ${BRANCH_NAME};git config --get remote.origin.url | sed ''s/.*://;s/.git$//'';git config --get remote.origin.url;' ] 
 
   - name: python
     id: env
