@@ -37,7 +37,7 @@ steps:
     id: env
     waitFor: ['login']
     entrypoint: 'bash'
-    args: ['-c', 'ls -A1 | grep -v docker-config | xargs rm -rf;git init;git remote add origin $$COMPONENT_GITURL;git fetch;git checkout --track -b $BRANCH_NAME origin/$BRANCH_NAME;dh envscript --envvars /workspace/component.toml --envscript /workspace/cloudbuild.sh;cat /workspace/cloudbuild.sh']
+    args: ['-c', 'ls -A1 | grep -v docker-config | xargs rm -rf;git init;git remote add origin $$COMPONENT_GITURL;git fetch;git checkout --track -b $BRANCH_NAME origin/$BRANCH_NAME;dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh;cat /workspace/cloudbuild.sh']
     volumes:
     - name: 'ssh'
       path: /root/.ssh
