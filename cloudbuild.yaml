@@ -33,34 +33,19 @@ steps:
       - 'DOCKER_CONFIG=/workspace/docker-config'
 
   # Setup environment including img tag name for nginx
-  - name: gcr.io/cloud-builders/docker
+  - name: 'quay.io/deployhub/compupdate'
     id: env
     waitFor: ['login']
     entrypoint: 'bash'
-    args: ['-c', 'ls -A1 | grep -v docker-config | xargs rm -rf;git init; git remote add origin $$COMPONENT_GITURL;git fetch;git checkout --track -b $BRANCH_NAME origin/$BRANCH_NAME;env | sort | sed "s/^/export /" >> /workspace/cloudbuild.sh;cat /workspace/cloudbuild.sh']
+    args: ['-c', 'ls -A1 | grep -v docker-config | xargs rm -rf;git init;git remote add origin $$COMPONENT_GITURL;git fetch;git checkout --track -b $BRANCH_NAME origin/$BRANCH_NAME;dh envscript --envvars /workspace/component.toml --envscript /workspace/cloudbuild.sh;cat /workspace/cloudbuild.sh']
     volumes:
     - name: 'ssh'
       path: /root/.ssh
     env: 
-      - 'COMPONENT_APPLICATION="GLOBAL.Stella Horses.Online Store Company.Hipster Store;July 4th Sale"'
-      - 'COMPONENT_APPLICATION_VERSION=1.2.9.1'      
-      - 'COMPONENT_NAME="GLOBAL.Stella Horses.Online Store Company.Purchase Processing.Shipping Service.shippingservice"'
-      - 'COMPONENT_GITURL=git@github.com:ortelius/store-shippingservice.git'
-      - 'COMPONENT_VARIANT=$BRANCH_NAME'
-      - 'COMPONENT_VERSION=1.2.2'
-      - 'COMPONENT_VERSION_COMMIT="v1.2.2.$$(git rev-list --count $BRANCH_NAME)-g$SHORT_SHA"'
-      - 'COMPONENT_DOCKERREPO=quay.io/hipsterstore/shippingservice'
-      - 'COMPONENT_CUSTOMACTION=GLOBAL.HelmChart'
-      - 'COMPONENT_CHARTNAME=chart/shippingservice'
-      - 'COMPONENT_CHARTNAMESPACE=stores'
-      - 'COMPONENT_OWNER_1_NAME=`curl http://www.pseudorandom.name`'
-      - 'COMPONENT_OWNER_2_FULLNAME="GLOBAL.Stella Horses.Online Store Company.Purchase Processing.$$COMPONENT_OWNER_1_NAME"'
-      - 'COMPONENT_OWNER_3_ID=$$(echo $$COMPONENT_OWNER_1_NAME | tr -d " ")'
-      - 'COMPONENT_OWNER_4_EMAIL=$$COMPONENT_OWNER_3_ID@gmail.com'
-      - 'COMPONENT_OWNER_5_PHONE="312-444-5555"'
-      - 'DEPLOY_ENV=GLOBAL.ortelius.saas.aks-cluster'
       - 'BLDDATE=`date`'
-      - 'IMAGE_TAG="$BRANCH_NAME-v$$COMPONENT_VERSION.$$(git rev-list --count $BRANCH_NAME)-g$SHORT_SHA"'
+      - 'BUILDNUM=$$(git rev-list --count $BRANCH_NAME)'
+      - 'GIT_URL=$$(git config --get remote.origin.url)'
+      - 'GIT_REPO=$$(git remote show origin -n | grep h.URL | sed ''s/.*://;s/.git$//'')'
       - 'DOCKER_CONFIG=/workspace/docker-config'
 
   # Build and push quay.io/ortelius/ms-textfile-crud
@@ -68,7 +53,7 @@ steps:
     id: build_push
     waitFor: ['env']
     entrypoint: 'bash'
-    args: ["-c", '. /workspace/cloudbuild.sh;env | sort;docker build --tag $$COMPONENT_DOCKERREPO:$$IMAGE_TAG -f /workspace/Dockerfile .;docker push $$COMPONENT_DOCKERREPO:$$IMAGE_TAG']
+    args: ["-c", '. /workspace/cloudbuild.sh;;docker build --tag $$COMPONENT_DOCKERREPO:$$IMAGE_TAG -f /workspace/Dockerfile .;docker push $$COMPONENT_DOCKERREPO:$$IMAGE_TAG']
     env:
       - 'DOCKER_CONFIG=/workspace/docker-config'
 
@@ -87,7 +72,7 @@ steps:
     waitFor: ['digest']
     entrypoint: 'bash'
     secretEnv: ['DHUSER', 'DHPASS']
-    args: ['-c', '. /workspace/cloudbuild.sh;dh updatecomp --dhurl https://dev.ortelius.io --appname "$$COMPONENT_APPLICATION" --appversion "$$COMPONENT_APPLICATION_VERSION" --appautoinc Y --compname "$$COMPONENT_NAME" --compvariant "$$COMPONENT_VARIANT" --compversion "$$COMPONENT_VERSION_COMMIT" --docker --compattr "GitCommit:$SHORT_SHA" --compattr "GitUrl:$$COMPONENT_GITURL" --compattr "GitRepo:ortelius/$REPO_NAME" --compattr "GitTag:$TAG_NAME" --compattr "GitBranch:$BRANCH_NAME" --compattr "Chart:$$COMPONENT_CHARTNAME" --compattr "DockerSha:$$DIGEST" --compattr "DockerBuildDate:$$BLDDATE" --compattr "DockerRepo:$$COMPONENT_DOCKERREPO" --compattr "BuildId:$BUILD_ID" --compattr "BuildUrl:https://console.cloud.google.com/cloud-build/builds/$BUILD_ID?project=$PROJECT_ID" --compattr "CustomAction:$$COMPONENT_CUSTOMACTION" --compattr "DockerTag:$$IMAGE_TAG" --compattr "ChartNamespace:$$COMPONENT_CHARTNAMESPACE" --compattr "Readme:/workspace/README.md" --compattr "License:/workspace/LICENSE"']
+    args: ['-c', '. /workspace/cloudbuild.sh;dh updatecomp --dhurl https://dev.ortelius.io --rsp /workspace/component.toml']
 
 secrets:
 - kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/quay
