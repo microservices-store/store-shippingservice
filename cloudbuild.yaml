@@ -28,7 +28,7 @@ steps:
         pip install deployhub | grep -i deployhub; \
         export BLDDATE=`date`; \
         export BUILDNUM=`git rev-list --count $BRANCH_NAME`; \
-        export DHURL=https://console.deployhub.com'; \
+        export DHURL=https://console.deployhub.com; \
         export DOCKER_CONFIG=/workspace/docker-config; \
         export GIT_REPO=`git config --get remote.origin.url | sed 's/.*://;s/.git$//'`; \
         export GIT_URL=`git config --get remote.origin.url`; \
