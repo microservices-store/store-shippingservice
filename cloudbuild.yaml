@@ -15,7 +15,7 @@
 steps:
   # Checkout all history
   - name: gcr.io/cloud-builders/git
-    args: ["fetch", "--unshallow"]
+    args: ["fetch", "--unshallow", "--all"]
   - name: gcr.io/cloud-builders/git
     entrypoint: /bin/bash
     args: ['-c','set -x;git branch -a;git rev-list --count ${BRANCH_NAME};git config --get remote.origin.url | sed ''s/.*://;s/.git$//;s#^//github.com/##;'';git config --get remote.origin.url;' ] 
