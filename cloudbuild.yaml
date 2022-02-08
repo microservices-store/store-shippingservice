@@ -30,10 +30,12 @@ steps:
   # Setup environment including img tag name for nginx
   - name: python
     id: env
+    secretEnv: ['DHUSER', 'DHPASS']
     entrypoint: 'bash'
     args:
       - '-c'
       - |
+        set -x; \
         pip install deployhub; \
         ls -A1 | grep -v docker-config | xargs rm -rf; \
         git init; \
@@ -45,7 +47,7 @@ steps:
         export DHURL=https://console.deployhub.com; \
         export BUILDNUM=`git rev-list --count $BRANCH_NAME`; \
         export GIT_URL=`git config --get remote.origin.url`; \
-        export GIT_REPO=`git remote show origin -n | grep h.URL | sed ''s/.*://;s/.git$//''`; \
+        export GIT_REPO=`git remote show origin -n | grep h.URL | sed 's/.*://;s/.git$//'`; \
         dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh; \
         cat /workspace/cloudbuild.sh
     volumes:
@@ -55,13 +57,13 @@ steps:
   # Login to Quay for push.
   - name: 'gcr.io/cloud-builders/docker'
     id: login
+    env: [ 'DOCKER_CONFIG=/workspace/docker-config' ]
+    secretEnv: ['QUAY_USERID', 'QUAY_PASSWORD']  
     entrypoint: 'bash'
     args: 
       - '-c'
-      - docker login quay.io --username "$$QUAY_USERID" --password $$QUAY_PASSWORD
-    secretEnv: ['QUAY_USERID', 'QUAY_PASSWORD']     
-    env:
-      - 'DOCKER_CONFIG=/workspace/docker-config'
+      - docker login quay.io --username "$$QUAY_USERID" --password $$QUAY_PASSWORD  
+
 
   # Build and push quay.io/ortelius/ms-textfile-crud
   - name: 'gcr.io/cloud-builders/docker'
@@ -87,8 +89,8 @@ steps:
   # Capture new component version in DeployHub
   - name: python
     id: compupdate
-    entrypoint: 'bash'
     secretEnv: ['DHUSER', 'DHPASS']
+    entrypoint: 'bash'
     args: 
       - '-c'
       - |
