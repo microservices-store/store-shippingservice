@@ -18,7 +18,7 @@ steps:
     args: ["fetch", "--unshallow"]
   - name: gcr.io/cloud-builders/git
     entrypoint: /bin/bash
-    args: ['-c','git log --oneline;git rev-list --count ${BRANCH_NAME};git config --get remote.origin.url | sed ''s/.*://;s/.git$//'';git config --get remote.origin.url;' ] 
+    args: ['-c','set -x;git branch -a;git rev-list --count ${BRANCH_NAME};git config --get remote.origin.url | sed ''s/.*://;s/.git$//;s#^//github.com/##;'';git config --get remote.origin.url;' ] 
 
   - name: python
     id: env
