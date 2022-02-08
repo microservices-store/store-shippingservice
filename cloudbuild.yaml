@@ -21,12 +21,12 @@ steps:
   - name: python
     id: env
     env: 
-      - 'BLDDATE=$(date)'
-      - 'BUILDNUM=$(git rev-list --count $BRANCH_NAME)'
+      - 'BLDDATE=`date`'
+      - 'BUILDNUM=`git rev-list --count $BRANCH_NAME`'
       - 'DHURL=https://console.deployhub.com'
       - 'DOCKER_CONFIG=/workspace/docker-config'
-      - 'GIT_REPO=$(git config --get remote.origin.url | sed ''s/.*://;s/.git$//'')'
-      - 'GIT_URL=$(git config --get remote.origin.url)'
+      - 'GIT_REPO=`git config --get remote.origin.url | sed ''s/.*://;s/.git$//''`'
+      - 'GIT_URL=`git config --get remote.origin.url`'
     entrypoint: 'bash'
     args:
       - '-c'
@@ -57,7 +57,7 @@ steps:
       - |
         source /workspace/cloudbuild.sh; \
         docker build --tag $$COMPONENT_DOCKERREPO:$$IMAGE_TAG -f /workspace/Dockerfile .; \
-        docker push $$COMPONENT_DOCKERREPO:$$IMAGE_TAG'
+        docker push $$COMPONENT_DOCKERREPO:$$IMAGE_TAG
 
   # Get image id
   - name: 'gcr.io/cloud-builders/docker'
