@@ -24,10 +24,7 @@ steps:
     args:
       - '-c'
       - |
-        export BLDDATE=`date`; \
         export BUILDNUM=`git rev-list --count ${BRANCH_NAME}`; \
-        export DHURL=https://console.deployhub.com; \
-        export DOCKER_CONFIG=/workspace/docker-config; \
         export GIT_REPO=`git config --get remote.origin.url | sed 's/.*://;s/.git$//'`; \
         export GIT_URL=`git config --get remote.origin.url`; \
         env | sed "s/^/export /" > /workspace/cloudbuild.sh;
@@ -38,6 +35,9 @@ steps:
     args:
       - '-c'
       - |
+        export BLDDATE=`date`'; \
+        export DHURL=https://console.deployhub.com; \
+        export DOCKER_CONFIG=/workspace/docker-config; \
         source /workspace/cloudbuild.sh; \
         dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh; \
         source /workspace/cloudbuild.sh; \
