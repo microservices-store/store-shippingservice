@@ -19,7 +19,7 @@ steps:
 
   # Setup environment including img tag name for nginx
   - name: gcr.io/cloud-builders/git
-    id: env
+    id: gitvars
     entrypoint: 'bash'
     args:
       - '-c'
