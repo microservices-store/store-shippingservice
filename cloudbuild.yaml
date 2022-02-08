@@ -13,32 +13,21 @@
 # limitations under the License.
 
 steps:
-  # Checkout all history
-  - name: gcr.io/cloud-builders/git
-    args: ['fetch', '--unshallow']
-
   # Setup environment including img tag name for nginx
-  - name: gcr.io/cloud-builders/git
+  - name: python
     id: gitvars
     entrypoint: 'bash'
     args:
       - '-c'
       - |
+        git fetch --unshallow; \
         export BUILDNUM=`git log --oneline | wc -l | tr -d " "`; \
         export GIT_REPO=`git config --get remote.origin.url | sed 's/.*://;s/.git$//;s#^//github.com/##;'`; \
         export GIT_URL=`git config --get remote.origin.url`; \
-        env | sed "s/^/export /" > /workspace/cloudbuild.sh;
-
-  - name: python
-    id: env
-    entrypoint: 'bash'
-    args:
-      - '-c'
-      - |
-        export BLDDATE=`date`'; \
+        export BLDDATE=`date`; \
         export DHURL=https://console.deployhub.com; \
         export DOCKER_CONFIG=/workspace/docker-config; \
-        source /workspace/cloudbuild.sh; \
+        pip3 install deployhub | grep -i deployhub; \
         dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh; \
         source /workspace/cloudbuild.sh; \
         env | sort;
@@ -53,7 +42,6 @@ steps:
       - | 
         source /workspace/cloudbuild.sh; \
         docker login quay.io --username "$$QUAY_USERID" --password $$QUAY_PASSWORD  
-
 
   # Build and push quay.io/ortelius/ms-textfile-crud
   - name: 'gcr.io/cloud-builders/docker'
