@@ -8,7 +8,7 @@ Version = "v1.2.2.${BUILDNUM}-g${SHORT_SHA}"
 
 [Export]
      IMAGE_TAG = "${Variant}-${Version}"
-     COMPONENT_DOCKERREPO="${DockerRepo}"
+     COMPONENT_DOCKERREPO="${Attributes.DockerRepo}"
 
 [Attributes]
      BuildId = "${BUILD_ID}"
