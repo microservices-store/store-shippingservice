@@ -33,7 +33,7 @@ steps:
       - 'DOCKER_CONFIG=/workspace/docker-config'
 
   # Setup environment including img tag name for nginx
-  - name: 'quay.io/deployhub/compupdate'
+  - name: 'quay.io/deployhub/compupdate:maintenance'
     id: env
     waitFor: ['login']
     entrypoint: 'bash'
@@ -67,7 +67,7 @@ steps:
     args: ['-c', ". /workspace/cloudbuild.sh;echo export DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $$COMPONENT_DOCKERREPO:$$IMAGE_TAG) >> /workspace/cloudbuild.sh" ]
 
   # Capture new component version in DeployHub
-  - name: 'quay.io/deployhub/compupdate'
+  - name: 'quay.io/deployhub/compupdate:maintenance'
     id: compupdate
     waitFor: ['digest']
     entrypoint: 'bash'
