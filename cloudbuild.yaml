@@ -34,9 +34,6 @@ steps:
         pip install deployhub; \
         dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh; \
         cat /workspace/cloudbuild.sh
-    volumes:
-    - name: 'ssh'
-      path: /root/.ssh
 
   # Login to Quay for push.
   - name: 'gcr.io/cloud-builders/docker'
