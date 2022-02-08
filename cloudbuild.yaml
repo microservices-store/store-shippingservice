@@ -30,9 +30,9 @@ steps:
       - '-c'
       - |
         git fetch --unshallow; \
-        BUILDNUM=`git log --oneline | wc -l | tr -d " "`; \
-        GIT_REPO=`git config --get remote.origin.url | sed 's/.*://;s/.git$//;s#^//github.com/##;'`; \
-        GIT_URL=`git config --get remote.origin.url`; \
+        export BUILDNUM=`git log --oneline | wc -l | tr -d " "`; \
+        export GIT_REPO=`git config --get remote.origin.url | sed 's/.*://;s/.git$//;s#^//github.com/##;'`; \
+        export GIT_URL=`git config --get remote.origin.url`; \
         pip3 install deployhub | grep -i deployhub; \
         dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh;
         source /workspace/cloudbuild.sh; \
