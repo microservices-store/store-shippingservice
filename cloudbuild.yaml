@@ -18,20 +18,27 @@ steps:
     args: ['fetch', '--unshallow']
 
   # Setup environment including img tag name for nginx
+  - name: gcr.io/cloud-builders/git
+    id: env
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        export BLDDATE=`date`; \
+        export BUILDNUM=`git rev-list --count ${BRANCH_NAME}`; \
+        export DHURL=https://console.deployhub.com; \
+        export DOCKER_CONFIG=/workspace/docker-config; \
+        export GIT_REPO=`git config --get remote.origin.url | sed 's/.*://;s/.git$//'`; \
+        export GIT_URL=`git config --get remote.origin.url`; \
+        env | sed "s/^/export /" > /workspace/cloudbuild.sh;
+
   - name: python
     id: env
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        set -x
-        pip install deployhub | grep -i deployhub; \
-        export BLDDATE=`date`; \
-        export BUILDNUM=`git rev-list --count $BRANCH_NAME`; \
-        export DHURL=https://console.deployhub.com; \
-        export DOCKER_CONFIG=/workspace/docker-config; \
-        export GIT_REPO=`git config --get remote.origin.url | sed 's/.*://;s/.git$//'`; \
-        export GIT_URL=`git config --get remote.origin.url`; \
+        source /workspace/cloudbuild.sh; \
         dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh; \
         source /workspace/cloudbuild.sh; \
         env | sort;
