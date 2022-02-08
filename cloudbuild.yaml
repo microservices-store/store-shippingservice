@@ -13,6 +13,10 @@
 # limitations under the License.
 
 steps:
+  # Checkout all history
+  - name: gcr.io/cloud-builders/git
+    args: ['fetch', '--unshallow']
+
   # Get ssh key from Google Secret Manager
   - name: gcr.io/cloud-builders/gcloud
     id: ssh_keys
@@ -30,24 +34,18 @@ steps:
   # Setup environment including img tag name for nginx
   - name: python
     id: env
-    secretEnv: ['DHUSER', 'DHPASS']
+    env: 
+      - 'BLDDATE=$(date)'
+      - 'BUILDNUM=$(git rev-list --count $BRANCH_NAME)'
+      - 'DHURL=https://console.deployhub.com'
+      - 'DOCKER_CONFIG=/workspace/docker-config'
+      - 'GIT_REPO=$(git config --get remote.origin.url | sed ''s/.*://;s/.git$//'')'
+      - 'GIT_URL=$(git config --get remote.origin.url)'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        set -x; \
         pip install deployhub; \
-        ls -A1 | grep -v docker-config | xargs rm -rf; \
-        git init; \
-        git remote add origin $_HEAD_REPO_URL; \
-        git fetch; \
-        git checkout --track -b $BRANCH_NAME origin/$BRANCH_NAME; \
-        export BLDDATE=`date`; \
-        export DOCKER_CONFIG=/workspace/docker-config; \
-        export DHURL=https://console.deployhub.com; \
-        export BUILDNUM=`git rev-list --count $BRANCH_NAME`; \
-        export GIT_URL=`git config --get remote.origin.url`; \
-        export GIT_REPO=`git remote show origin -n | grep h.URL | sed 's/.*://;s/.git$//'`; \
         dh envscript --envvars /workspace/component.toml --envvars_sh /workspace/cloudbuild.sh; \
         cat /workspace/cloudbuild.sh
     volumes:
