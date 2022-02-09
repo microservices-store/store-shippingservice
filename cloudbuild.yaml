@@ -68,7 +68,7 @@ steps:
       - '-c'
       - |
         source /workspace/cloudbuild.sh; \
-        echo export DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $$COMPONENT_DOCKERREPO:$$IMAGE_TAG) >> /workspace/cloudbuild.sh
+        echo export DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' $$COMPONENT_DOCKERREPO:$$IMAGE_TAG | cut -d: -f2 | cut -c-12) >> /workspace/cloudbuild.sh
 
   # Capture new component version in DeployHub
   - name: python
@@ -91,7 +91,7 @@ secrets:
     QUAY_PASSWORD: CiQAUULEud9Ej8XtwNAb9gkbDVhSGFZYhUGE30fNwR+7ehAOkH8SMgCz6KYeykjgS16RPxgKlrIQL/1TKDt06v4OXGIisFXOkdWC+jvdda8mTzVNCi8sT5g6 
 - kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/ortelius-id
   secretEnv:
-    DHUSER: CiQAGgJuQJjmnUATuJTR8aZBFGQpV6LL+t5nt9qIfFCPDN0P5LASMQC43iioXIWr8T4QuBu7XoTqvGrVVDE4fswO6ofJteDQ0XvVjv+60BvKgE27w2nOW0U=
+    DHUSER: CiQAGgJuQPSnKQp3ORI4qwqJO9FtelelLISVTghBDc35ayDWIycSMQC43iio9bEN5d20trUaMaJM450twRwzTeBGwBMxWAF+aN/n7ZuYN6fJRd+eAuCXfQg=
 - kmsKeyName: projects/eighth-physics-169321/locations/global/keyRings/cli/cryptoKeys/ortelius-pw
   secretEnv:
-    DHPASS: CiQAZySXz3RXZ/hW1t8F7U121ZthJ4JVhhvGnnC2doESqKgQoYcSLQB98+y3iKNgr9BQfiAxpl+onNmnGoB2zOUJpsOi2J+w65rq2jrhc7BYERXZUA==   
+    DHPASS: CiQAZySXz8Q7gIFx7HwjyN6XSxTLSY8Cox5QDU090ny+Bd2KDYUSLwB98+y3bxvNRjeB+mtRzMuaObIImup/vDgLKieuXwingEDCwriZhmboQ/1prq11   
